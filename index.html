@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Menu</title>
+</head>
+<body>
+  <h1>Restaurant Menu</h1>
+  <div id="menu"></div>
+
+  <script>
+    fetch("menu.json")
+      .then(response => response.json())
+      .then(data => {
+        const menuDiv = document.getElementById("menu");
+        data.forEach(item => {
+          const p = document.createElement("p");
+          p.textContent = item.name + " - ¥" + item.price;
+          menuDiv.appendChild(p);
+        });
+      });
+  </script>
+</body>
+</html>
