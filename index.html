@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Menu</title>
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin:0; background:#111; color:#fff; }
@@ -14,7 +14,7 @@
   .meta { flex:1; min-width:0; }
   .name { font-size:16px; font-weight:700; }
   .price { margin-top:4px; font-size:15px; }
-  .desc { margin-top:6px; font-size:13px; color:#aaa; line-height:1.35; }
+  .desc { margin-top:6px; font-size:13px; color:#aaa; line-height:1.35; white-space:pre-wrap; }
   .muted { color:#aaa; padding:0 16px 20px; }
 </style>
 </head>
@@ -23,58 +23,27 @@
 <div id="menu" class="muted">Loading...</div>
 
 <script>
-  const ENDPOINT = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLjmBPjsea-KLkyCzMEHCo-2vA4irZeUHasF9jcXNkclasUZxh04dWNTAu1mIcrV30P_jJmqIIvhclvcLcx8GdLxhhb2FN5-2NOhcmesh3G-pS4odLj57hRenZAe4knydSTrcm1zvNUBzjlS2iss7eHTDzntsgVGvpJKNeil82KlwYKo8fW745P2fLHWkFzqJUq7QjuwajBHqTfbU_iUQSDZr_5zXXBj9LIbTDuNQSjeAD5plG553tlaV8txbxX8Bbv0eeETHXs1Ph8v8KtzHKfwi-EnZGe4Ftqxvgj6&lib=MRzRUkjiJCaa5zbnHO1hOcodqnBwLXW8V";
+/** ここにあなたの「公開CSV URL」を貼る */
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRGxN8YgKwNRIYis1xPoDaMKNR0rURaMG6Lm9Gx85r0_dKVxeiFnLgyS8dxJ6rlIwru0HrrrbzyU06E/pub?gid=0&single=true&output=csv";
 
-  async function main(){
-    const root = document.getElementById("menu");
-    try{
-      // 毎日更新なのでキャッシュ回避
-      const res = await fetch(ENDPOINT + "?v=" + Date.now());
-      if(!res.ok) throw new Error("HTTP " + res.status);
-      const data = await res.json();
+/** カテゴリ順（指定どおり固定） */
+const CATEGORY_ORDER = ["ビール","スパークリング","赤ワイン","白ワイン","ロゼ","シェリー","フード"];
+const orderIndex = Object.fromEntries(CATEGORY_ORDER.map((c,i)=>[c,i]));
 
-      root.className = "";
-      root.innerHTML = "";
+/** CSVパーサ（ダブルクォート/カンマ/改行に対応） */
+function parseCSV(text){
+  const rows = [];
+  let row = [], field = "", inQuotes = false;
 
-      (data.categories || []).forEach(cat => {
-        const section = document.createElement("section");
-        section.innerHTML = `<h2>${cat}</h2>`;
-        root.appendChild(section);
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    const next = text[i+1];
 
-        const list = (data.items_by_category && data.items_by_category[cat]) ? data.items_by_category[cat] : [];
-        if(list.length === 0){
-          const p = document.createElement("div");
-          p.className = "muted";
-          p.style.padding = "8px 0 2px";
-          p.textContent = "（現在提供中のメニューはありません）";
-          section.appendChild(p);
-          return;
-        }
-
-        list.forEach(item => {
-          const card = document.createElement("div");
-          card.className = "card";
-          const img = item.image_url ? `<img src="${item.image_url}" alt="${item.name}" loading="lazy">` : `<img alt="" loading="lazy">`;
-          card.innerHTML = `
-            ${img}
-            <div class="meta">
-              <div class="name">${item.name || ""}</div>
-              <div class="price">¥${Number(item.price_yen || 0).toLocaleString("ja-JP")}</div>
-              <div class="desc">${item.desc || ""}</div>
-            </div>
-          `;
-          section.appendChild(card);
-        });
-      });
-
-    }catch(e){
-      root.textContent = "Menu load error: " + e;
-      root.className = "muted";
-      console.error(e);
-    }
-  }
-  main();
-</script>
-</body>
-</html>
+    if (inQuotes) {
+      if (c === '"' && next === '"') { field += '"'; i++; }
+      else if (c === '"') { inQuotes = false; }
+      else { field += c; }
+    } else {
+      if (c === '"') inQuotes = true;
+      else if (c === ',') { row.push(
 
