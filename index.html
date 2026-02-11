@@ -45,5 +45,124 @@ function parseCSV(text){
       else { field += c; }
     } else {
       if (c === '"') inQuotes = true;
-      else if (c === ',') { row.push(
+      else if (c === ',') { row.push(field); field = ""; }
+      else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ""; }
+      else if (c === '\r') { /* ignore */ }
+      else { field += c; }
+    }
+  }
+  // last field
+  row.push(field);
+  rows.push(row);
 
+  // 末尾の空行除去
+  return rows.filter(r => r.some(x => String(x).trim() !== ""));
+}
+
+function toBool(s){
+  const v = String(s ?? "").trim().toLowerCase();
+  return v === "true" || v === "1" || v === "yes" || v === "y";
+}
+function toNum(s){
+  const v = String(s ?? "").replace(/[^\d.-]/g, "");
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+function esc(s){
+  return String(s ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+async function main(){
+  const root = document.getElementById("menu");
+
+  try{
+    // 毎日更新なのでキャッシュ回避
+    const url = CSV_URL + (CSV_URL.includes("?") ? "&" : "?") + "t=" + Date.now();
+    const res = await fetch(url);
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    const csvText = await res.text();
+
+    const rows = parseCSV(csvText);
+    if(rows.length < 2) throw new Error("CSV is empty");
+
+    const headers = rows[0].map(h => String(h).trim());
+    const idx = Object.fromEntries(headers.map((h,i)=>[h,i]));
+
+    // 必須列チェック（不足しても落とさず動かす）
+    const col = (name) => idx[name];
+
+    const items = rows.slice(1)
+      .map(r => ({
+        sort: toNum(r[col("sort")]),
+        category: String(r[col("category")] ?? "").trim(),
+        name: String(r[col("name")] ?? "").trim(),
+        price_yen: toNum(r[col("price_yen")]),
+        desc: String(r[col("desc")] ?? "").trim(),
+        image_url: String(r[col("image_url")] ?? "").trim(),
+        available: toBool(r[col("available")]),
+      }))
+      .filter(x => x.available)
+      .filter(x => x.category && x.name);
+
+    // カテゴリごとにまとめる
+    const grouped = {};
+    for (const c of CATEGORY_ORDER) grouped[c] = [];
+    for (const it of items) {
+      if (!grouped[it.category]) grouped[it.category] = [];
+      grouped[it.category].push(it);
+    }
+
+    // カテゴリ順（未定義カテゴリは末尾）
+    const categories = Object.keys(grouped).sort((a,b) => (orderIndex[a] ?? 999) - (orderIndex[b] ?? 999));
+
+    // 描画
+    root.className = "";
+    root.innerHTML = "";
+
+    categories.forEach(cat => {
+      const list = grouped[cat] || [];
+      // 全空カテゴリは出さない（見た目スッキリ）
+      if(list.length === 0) return;
+
+      list.sort((a,b) => (a.sort ?? 9999) - (b.sort ?? 9999));
+
+      const section = document.createElement("section");
+      section.innerHTML = `<h2>${esc(cat)}</h2>`;
+      root.appendChild(section);
+
+      list.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const imgHtml = item.image_url
+          ? `<img src="${esc(item.image_url)}" alt="${esc(item.name)}" loading="lazy">`
+          : `<img alt="" loading="lazy">`;
+
+        card.innerHTML = `
+          ${imgHtml}
+          <div class="meta">
+            <div class="name">${esc(item.name)}</div>
+            <div class="price">¥${Number(item.price_yen).toLocaleString("ja-JP")}</div>
+            <div class="desc">${esc(item.desc)}</div>
+          </div>
+        `;
+        section.appendChild(card);
+      });
+    });
+
+    if(root.innerHTML.trim() === ""){
+      root.className = "muted";
+      root.textContent = "現在提供中のメニューがありません";
+    }
+
+  }catch(e){
+    root.className = "muted";
+    root.textContent = "Menu load error: " + e;
+    console.error(e);
+  }
+}
+
+main();
+</script>
+</body>
+</html>
