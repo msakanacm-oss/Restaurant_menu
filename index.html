@@ -1,24 +1,80 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>Menu</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Menu</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin:0; background:#111; color:#fff; }
+  h1 { text-align:center; padding:18px 0; margin:0; letter-spacing:0.08em; }
+  section { padding:0 16px; }
+  h2 { margin:28px 0 10px; padding-bottom:6px; border-bottom:1px solid #333; font-size:18px; }
+  .card { display:flex; gap:12px; padding:12px 0; border-bottom:1px solid #222; align-items:center; }
+  .card img { width:92px; height:92px; border-radius:10px; object-fit:cover; background:#222; }
+  .meta { flex:1; min-width:0; }
+  .name { font-size:16px; font-weight:700; }
+  .price { margin-top:4px; font-size:15px; }
+  .desc { margin-top:6px; font-size:13px; color:#aaa; line-height:1.35; }
+  .muted { color:#aaa; padding:0 16px 20px; }
+</style>
 </head>
 <body>
-  <h1>Restaurant Menu</h1>
-  <div id="menu"></div>
+<h1>MENU</h1>
+<div id="menu" class="muted">Loading...</div>
 
-  <script>
-    fetch("menu.json")
-      .then(response => response.json())
-      .then(data => {
-        const menuDiv = document.getElementById("menu");
-        data.forEach(item => {
-          const p = document.createElement("p");
-          p.textContent = item.name + " - ¥" + item.price;
-          menuDiv.appendChild(p);
+<script>
+  const ENDPOINT = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLjmBPjsea-KLkyCzMEHCo-2vA4irZeUHasF9jcXNkclasUZxh04dWNTAu1mIcrV30P_jJmqIIvhclvcLcx8GdLxhhb2FN5-2NOhcmesh3G-pS4odLj57hRenZAe4knydSTrcm1zvNUBzjlS2iss7eHTDzntsgVGvpJKNeil82KlwYKo8fW745P2fLHWkFzqJUq7QjuwajBHqTfbU_iUQSDZr_5zXXBj9LIbTDuNQSjeAD5plG553tlaV8txbxX8Bbv0eeETHXs1Ph8v8KtzHKfwi-EnZGe4Ftqxvgj6&lib=MRzRUkjiJCaa5zbnHO1hOcodqnBwLXW8V";
+
+  async function main(){
+    const root = document.getElementById("menu");
+    try{
+      // 毎日更新なのでキャッシュ回避
+      const res = await fetch(ENDPOINT + "?v=" + Date.now());
+      if(!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+
+      root.className = "";
+      root.innerHTML = "";
+
+      (data.categories || []).forEach(cat => {
+        const section = document.createElement("section");
+        section.innerHTML = `<h2>${cat}</h2>`;
+        root.appendChild(section);
+
+        const list = (data.items_by_category && data.items_by_category[cat]) ? data.items_by_category[cat] : [];
+        if(list.length === 0){
+          const p = document.createElement("div");
+          p.className = "muted";
+          p.style.padding = "8px 0 2px";
+          p.textContent = "（現在提供中のメニューはありません）";
+          section.appendChild(p);
+          return;
+        }
+
+        list.forEach(item => {
+          const card = document.createElement("div");
+          card.className = "card";
+          const img = item.image_url ? `<img src="${item.image_url}" alt="${item.name}" loading="lazy">` : `<img alt="" loading="lazy">`;
+          card.innerHTML = `
+            ${img}
+            <div class="meta">
+              <div class="name">${item.name || ""}</div>
+              <div class="price">¥${Number(item.price_yen || 0).toLocaleString("ja-JP")}</div>
+              <div class="desc">${item.desc || ""}</div>
+            </div>
+          `;
+          section.appendChild(card);
         });
       });
-  </script>
+
+    }catch(e){
+      root.textContent = "Menu load error: " + e;
+      root.className = "muted";
+      console.error(e);
+    }
+  }
+  main();
+</script>
 </body>
 </html>
+
