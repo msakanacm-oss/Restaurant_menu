@@ -40,6 +40,14 @@
   z-index: 1000;
 }
 
+.last-updated {
+  font-size: 11px;
+  color: #777;
+  text-align: right;
+  padding: 6px 16px 16px;
+}
+
+
 #category-nav a {
   color: #fff;
   text-decoration: none;
@@ -69,6 +77,8 @@
 </div>
 <div id="category-nav"></div>
 <div id="menu" class="muted">Loading...</div>
+<div id="last-updated" class="last-updated"></div>
+
 
 <script>
 /** ここにあなたの「公開CSV URL」を貼る */
@@ -138,6 +148,18 @@ async function main(){
     const res = await fetch(url, { cache: "no-store" });
     if(!res.ok) throw new Error("HTTP " + res.status);
     const csvText = await res.text();
+    // 最終更新時刻表示
+    const now = new Date();
+    const formatted =
+      now.getFullYear() + "/" +
+      String(now.getMonth()+1).padStart(2,"0") + "/" +
+      String(now.getDate()).padStart(2,"0") + " " +
+      String(now.getHours()).padStart(2,"0") + ":" +
+      String(now.getMinutes()).padStart(2,"0");
+    
+    document.getElementById("last-updated").textContent =
+      "Updated: " + formatted;
+
 
     const rows = parseCSV(csvText);
     if(rows.length < 2) throw new Error("CSV is empty");
