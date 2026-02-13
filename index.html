@@ -100,6 +100,13 @@ const CATEGORY_ORDER = [
 ];
   
 const orderIndex = Object.fromEntries(CATEGORY_ORDER.map((c, i) => [c, i]));
+
+const PRICE_FROM_MAP = {
+  "Vino tinto（赤ワイン）": "¥720～",
+  "Vino blanco（白ワイン）": "¥720～",
+  "Vino rosado（ロゼワイン）": "¥720～",
+  "Vino naranja（オレンジワイン）": "¥720～"
+};
   
 /** CSVパーサ（ダブルクォート/カンマ/改行に対応） */
 function parseCSV(text){
@@ -237,13 +244,23 @@ categories.forEach(cat => {
       const section = document.createElement("section");
       section.id = cat;
       let headerHtml = `<h2>${esc(cat)}</h2>`;
-        if(cat === "Comida（フード）"){
-          headerHtml += `
-            <div class="size-legend">
-              Size : S（お一人様） / M（2名様） / L（シェア）
-            </div>
-          `;
-        }
+
+      if (PRICE_FROM_MAP[cat]) {
+        headerHtml += `
+          <div class="muted" style="font-size:13px; margin-bottom:6px;">
+            ${PRICE_FROM_MAP[cat]}
+          </div>
+        `;
+      }
+
+    //   let headerHtml = `<h2>${esc(cat)}</h2>`;
+     //    if(cat === "Comida（フード）"){
+     //      headerHtml += `
+      //       <div class="size-legend">
+      //         Size : S（お一人様） / M（2名様） / L（シェア）
+      //       </div>
+      //     `;
+      //   }
         
         section.innerHTML = headerHtml;
 
@@ -264,6 +281,16 @@ categories.forEach(cat => {
 
 
     let priceHtml = "";
+        // ★ ワイン系は個別価格を出さない
+    if (PRICE_FROM_MAP[item.category]) {
+      priceHtml = "";
+    }
+    else if(item.category === FOOD_CATEGORY && (item.price_s || item.price_m || item.price_l)){
+      ...
+    }
+    else if(item.price_yen){
+      priceHtml = `<div class="price">¥${item.price_yen.toLocaleString("ja-JP")}</div>`;
+    }
 
     // フードでサイズ価格がある場合
     if(item.category === "Comida（フード）" && (item.price_s || item.price_m || item.price_l)){
