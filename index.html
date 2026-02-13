@@ -53,6 +53,11 @@
 #category-nav a:hover {
   background: #333;
 }
+.size-legend {
+  font-size: 12px;
+  color: #aaa;
+  margin-bottom: 8px;
+}
 
 </style>
 </head>
@@ -196,7 +201,17 @@ categories.forEach(cat => {
 
       const section = document.createElement("section");
       section.id = cat;
-      section.innerHTML = `<h2>${esc(cat)}</h2>`
+      let headerHtml = `<h2>${esc(cat)}</h2>`;
+        if(cat === "フード"){
+          headerHtml += `
+            <div class="size-legend">
+              S（お一人様） / M（2名様） / L（シェア）
+            </div>
+          `;
+        }
+        
+        section.innerHTML = headerHtml;
+
       root.appendChild(section);
 
       list.forEach(item => {
