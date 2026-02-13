@@ -135,7 +135,7 @@ async function main(){
   try{
     // 毎日更新なのでキャッシュ回避
     const url = CSV_URL + (CSV_URL.includes("?") ? "&" : "?") + "t=" + Date.now();
-    const res = await fetch(url);
+    const res = await fetch(url, { cache: "no-store" });
     if(!res.ok) throw new Error("HTTP " + res.status);
     const csvText = await res.text();
 
