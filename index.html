@@ -114,9 +114,12 @@ function esc(s){
 function toImageUrl(image_id, image_url){
   const id = String(image_id ?? "").trim();
   if(id) return "https://lh3.googleusercontent.com/d/" + encodeURIComponent(id);
+
   const url = String(image_url ?? "").trim();
-  return url; // 互換：旧image_urlが残っていても表示できる
+  if(!url) return "";
+  return url;
 }
+
 
 async function main(){
   const root = document.getElementById("menu");
@@ -135,7 +138,7 @@ async function main(){
     const idx = Object.fromEntries(headers.map((h,i)=>[h,i]));
 
     // 必須列チェック（不足しても落とさず動かす）
-    const col = (name) => idx[name];
+    const col = (name) => (idx[name] ?? -1);
 
     const items = rows.slice(1)
       .map(r => ({
@@ -144,8 +147,8 @@ async function main(){
         name: String(r[col("name")] ?? "").trim(),
         price_yen: toNum(r[col("price_yen")]),
         desc: String(r[col("desc")] ?? "").trim(),
-        image_id: String(r[col("image_id")] ?? "").trim(),
-        image_url: String(r[col("image_url")] ?? "").trim(),
+        image_id: (col("image_id") >= 0 ? String(r[col("image_id")] ?? "").trim() : ""),
+        image_url: (col("image_url") >= 0 ? String(r[col("image_url")] ?? "").trim() : ""),
         available: toBool(r[col("available")]),
       }))
       .filter(x => x.available)
