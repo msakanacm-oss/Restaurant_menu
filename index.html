@@ -281,25 +281,24 @@ categories.forEach(cat => {
 
 
     let priceHtml = "";
-        // ★ ワイン系は個別価格を出さない
-    if (PRICE_FROM_MAP[item.category]) {
-      priceHtml = "";
-    }
-    else if(item.category === FOOD_CATEGORY && (item.price_s || item.price_m || item.price_l)){
-      ...
-    }
-    else if(item.price_yen){
-      priceHtml = `<div class="price">¥${item.price_yen.toLocaleString("ja-JP")}</div>`;
-    }
 
-    // フードでサイズ価格がある場合
-    if(item.category === "Comida（フード）" && (item.price_s || item.price_m || item.price_l)){
-      const parts = [];
-      if(item.price_s) parts.push(`S ¥${item.price_s.toLocaleString("ja-JP")}`);
-      if(item.price_m) parts.push(`M ¥${item.price_m.toLocaleString("ja-JP")}`);
-      if(item.price_l) parts.push(`L ¥${item.price_l.toLocaleString("ja-JP")}`);
-      priceHtml = `<div class="size-row">${parts.join(" / ")}</div>`;
-    }
+// 1) ワイン系は個別価格を出さない（カテゴリ側で「¥720～」を出すため）
+if (PRICE_FROM_MAP[item.category]) {
+  priceHtml = "";
+}
+// 2) フード：S/M/L がある場合だけサイズ価格表示
+else if (item.category === "Comida（フード）" && (item.price_s || item.price_m || item.price_l)) {
+  const parts = [];
+  if (item.price_s) parts.push(`S ¥${item.price_s.toLocaleString("ja-JP")}`);
+  if (item.price_m) parts.push(`M ¥${item.price_m.toLocaleString("ja-JP")}`);
+  if (item.price_l) parts.push(`L ¥${item.price_l.toLocaleString("ja-JP")}`);
+  priceHtml = `<div class="size-row">${parts.join(" / ")}</div>`;
+}
+// 3) それ以外：通常価格
+else if (item.price_yen) {
+  priceHtml = `<div class="price">¥${item.price_yen.toLocaleString("ja-JP")}</div>`;
+}
+
     // 通常価格
     else if(item.price_yen){
       priceHtml = `<div class="price">¥${item.price_yen.toLocaleString("ja-JP")}</div>`;
