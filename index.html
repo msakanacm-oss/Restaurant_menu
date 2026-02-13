@@ -149,6 +149,9 @@ async function main(){
         category: String(r[col("category")] ?? "").trim(),
         name: String(r[col("name")] ?? "").trim(),
         price_yen: toNum(r[col("price_yen")]),
+        price_s: toNum(r[col("price_s")]),
+        price_m: toNum(r[col("price_m")]),
+        price_l: toNum(r[col("price_l")]),
         desc: String(r[col("desc")] ?? "").trim(),
         image_id: (col("image_id") >= 0 ? String(r[col("image_id")] ?? "").trim() : ""),
         image_url: (col("image_url") >= 0 ? String(r[col("image_url")] ?? "").trim() : ""),
@@ -156,6 +159,7 @@ async function main(){
       }))
       .filter(x => x.available)
       .filter(x => x.category && x.name);
+
 
     // カテゴリごとにまとめる
     const grouped = {};
@@ -209,14 +213,30 @@ categories.forEach(cat => {
         : `<img alt="" loading="lazy">`;
 
 
-        card.innerHTML = `
-          ${imgHtml}
-          <div class="meta">
-            <div class="name">${esc(item.name)}</div>
-            <div class="price">¥${Number(item.price_yen).toLocaleString("ja-JP")}</div>
-            <div class="desc">${esc(item.desc)}</div>
-          </div>
-        `;
+    let priceHtml = "";
+
+    // フードでサイズ価格がある場合
+    if(item.category === "フード" && (item.price_s || item.price_m || item.price_l)){
+      const parts = [];
+      if(item.price_s) parts.push(`S ¥${item.price_s.toLocaleString("ja-JP")}`);
+      if(item.price_m) parts.push(`M ¥${item.price_m.toLocaleString("ja-JP")}`);
+      if(item.price_l) parts.push(`L ¥${item.price_l.toLocaleString("ja-JP")}`);
+      priceHtml = `<div class="size-row">${parts.join(" / ")}</div>`;
+    }
+    // 通常価格
+    else if(item.price_yen){
+      priceHtml = `<div class="price">¥${item.price_yen.toLocaleString("ja-JP")}</div>`;
+    }
+
+card.innerHTML = `
+  ${imgHtml}
+  <div class="meta">
+    <div class="name">${esc(item.name)}</div>
+    ${priceHtml}
+    <div class="desc">${esc(item.desc)}</div>
+  </div>
+`;
+
         section.appendChild(card);
       });
     });
