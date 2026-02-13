@@ -10,6 +10,12 @@
 }
   body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin:0; background:#111; color:#fff; }
   h1 { text-align:center; padding:18px 0; margin:0; letter-spacing:0.08em; }
+  .notice{
+  padding: 0 16px 10px;
+  color: #aaa;
+  font-size: 13px;
+  line-height: 1.4;
+}
   section { padding:0 16px; }
   h2 { margin:28px 0 10px; padding-bottom:6px; border-bottom:1px solid #333; font-size:18px; }
   .card { display:flex; gap:12px; padding:12px 0; border-bottom:1px solid #222; align-items:center; }
@@ -34,8 +40,8 @@
 #category-nav a {
   color: #fff;
   text-decoration: none;
-  font-size: 14px;
-  padding: 6px 10px;
+  font-size: 16px;
+  padding: 8px 12px;
   border: 1px solid #444;
   border-radius: 20px;
   white-space: nowrap;
@@ -50,6 +56,10 @@
 <body>
 <div id="category-nav"></div>
 <h1>MENU</h1>
+  <div class="notice">
+  ※表示価格はすべて税込です。<br>
+  ※お水をご注文の場合は、100円で飲み放題です（不要な方には頂戴しません）。
+</div>
 <div id="menu" class="muted">Loading...</div>
 
 <script>
