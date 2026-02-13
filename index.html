@@ -111,6 +111,12 @@ function toNum(s){
 function esc(s){
   return String(s ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
+function toImageUrl(image_id, image_url){
+  const id = String(image_id ?? "").trim();
+  if(id) return "https://lh3.googleusercontent.com/d/" + encodeURIComponent(id);
+  const url = String(image_url ?? "").trim();
+  return url; // 互換：旧image_urlが残っていても表示できる
+}
 
 async function main(){
   const root = document.getElementById("menu");
@@ -138,6 +144,7 @@ async function main(){
         name: String(r[col("name")] ?? "").trim(),
         price_yen: toNum(r[col("price_yen")]),
         desc: String(r[col("desc")] ?? "").trim(),
+        image_id: String(r[col("image_id")] ?? "").trim(),
         image_url: String(r[col("image_url")] ?? "").trim(),
         available: toBool(r[col("available")]),
       }))
@@ -186,9 +193,15 @@ categories.forEach(cat => {
         const card = document.createElement("div");
         card.className = "card";
 
-        const imgHtml = item.image_url
-          ? `<img src="${item.image_url.trim()}" alt="${esc(item.name)}" loading="lazy">`
-          : `<img alt="" loading="lazy">`;
+  //       const imgHtml = item.image_url
+     //      ? `<img src="${item.image_url.trim()}" alt="${esc(item.name)}" loading="lazy">`
+     //      : `<img alt="" loading="lazy">`;
+        const imgSrc = toImageUrl(item.image_id, item.image_url);
+
+        const imgHtml = imgSrc
+        ? `<img src="${imgSrc}" alt="${esc(item.name)}" loading="lazy">`
+        : `<img alt="" loading="lazy">`;
+
 
         card.innerHTML = `
           ${imgHtml}
