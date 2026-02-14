@@ -196,18 +196,19 @@ function toImageUrl(image_id, image_url){
 
   let priceHtml = "";
 
-  if (PRICE_FROM_MAP[item.category] || item.category === "Sherry") {
+if (PRICE_FROM_MAP[item.category] || item.category === "Sherry") {
   priceHtml = "";
 }
-  } else if (item.category === "Comida（フード）" && (item.price_s || item.price_m || item.price_l)) {
-    const parts = [];
-    if (item.price_s) parts.push(`S ¥${item.price_s.toLocaleString("ja-JP")}`);
-    if (item.price_m) parts.push(`M ¥${item.price_m.toLocaleString("ja-JP")}`);
-    if (item.price_l) parts.push(`L ¥${item.price_l.toLocaleString("ja-JP")}`);
-    priceHtml = `<div class="size-row">${parts.join(" / ")}</div>`;
-  } else if (item.price_yen) {
-    priceHtml = `<div class="price">¥${item.price_yen.toLocaleString("ja-JP")}</div>`;
-  }
+else if (item.category === "Comida（フード）" && (item.price_s || item.price_m || item.price_l)) {
+  const parts = [];
+  if (item.price_s) parts.push(`S ¥${item.price_s.toLocaleString("ja-JP")}`);
+  if (item.price_m) parts.push(`M ¥${item.price_m.toLocaleString("ja-JP")}`);
+  if (item.price_l) parts.push(`L ¥${item.price_l.toLocaleString("ja-JP")}`);
+  priceHtml = `<div class="size-row">${parts.join(" / ")}</div>`;
+}
+else if (item.price_yen) {
+  priceHtml = `<div class="price">¥${item.price_yen.toLocaleString("ja-JP")}</div>`;
+}
 
   card.innerHTML = `
     ${imgHtml}
