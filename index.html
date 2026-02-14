@@ -67,6 +67,15 @@
   margin-bottom: 8px;
 }
 
+  .sub-title {
+  font-size: 14px;
+  color: #ccc;
+  margin-top: 18px;
+  margin-bottom: 6px;
+  letter-spacing: 0.05em;
+}
+
+
 </style>
 </head>
 <body>
@@ -158,6 +167,28 @@ function toImageUrl(image_id, image_url){
   return url;
 }
 
+  function renderCard(item, section){
+  const card = document.createElement("div");
+  card.className = "card";
+
+  const imgSrc = toImageUrl(item.image_id, item.image_url);
+  const imgHtml = imgSrc
+    ? `<img src="${imgSrc}" alt="${esc(item.name)}" loading="lazy">`
+    : `<img alt="" loading="lazy">`;
+
+  card.innerHTML = `
+    ${imgHtml}
+    <div class="meta">
+      <div class="name">${esc(item.name)}</div>
+      <div class="price">¥${Number(item.price_yen).toLocaleString("ja-JP")}</div>
+      <div class="desc">${esc(item.desc)}</div>
+    </div>
+  `;
+
+  section.appendChild(card);
+}
+
+
 
 async function main(){
   const root = document.getElementById("menu");
@@ -243,14 +274,24 @@ categories.forEach(cat => {
             // シェリーだけサブカテゴリ分け
       let groupedSub = null;
       
-      if(cat === "シェリー"){
-        groupedSub = {};
-        list.forEach(item => {
-          const key = item.sub_category || "その他";
-          if(!groupedSub[key]) groupedSub[key] = [];
-          groupedSub[key].push(item);
-        });
-      }
+      if(cat === "シェリー" && groupedSub){
+  Object.keys(groupedSub).forEach(sub => {
+
+    const subTitle = document.createElement("h3");
+    subTitle.className = "sub-title";
+    subTitle.textContent = sub;
+    section.appendChild(subTitle);
+
+    groupedSub[sub].forEach(item => {
+      renderCard(item, section);
+    });
+
+  });
+} else {
+  list.forEach(item => {
+    renderCard(item, section);
+  });
+}
 
       const section = document.createElement("section");
       section.id = cat;
