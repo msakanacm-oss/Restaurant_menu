@@ -176,17 +176,32 @@ function toImageUrl(image_id, image_url){
     ? `<img src="${imgSrc}" alt="${esc(item.name)}" loading="lazy">`
     : `<img alt="" loading="lazy">`;
 
+  let priceHtml = "";
+
+  if (PRICE_FROM_MAP[item.category]) {
+    priceHtml = "";
+  } else if (item.category === "Comida（フード）" && (item.price_s || item.price_m || item.price_l)) {
+    const parts = [];
+    if (item.price_s) parts.push(`S ¥${item.price_s.toLocaleString("ja-JP")}`);
+    if (item.price_m) parts.push(`M ¥${item.price_m.toLocaleString("ja-JP")}`);
+    if (item.price_l) parts.push(`L ¥${item.price_l.toLocaleString("ja-JP")}`);
+    priceHtml = `<div class="size-row">${parts.join(" / ")}</div>`;
+  } else if (item.price_yen) {
+    priceHtml = `<div class="price">¥${item.price_yen.toLocaleString("ja-JP")}</div>`;
+  }
+
   card.innerHTML = `
     ${imgHtml}
     <div class="meta">
       <div class="name">${esc(item.name)}</div>
-      <div class="price">¥${Number(item.price_yen).toLocaleString("ja-JP")}</div>
+      ${priceHtml}
       <div class="desc">${esc(item.desc)}</div>
     </div>
   `;
 
   section.appendChild(card);
 }
+
 
 
 
@@ -225,6 +240,7 @@ async function main(){
       .map(r => ({
         sort: toNum(r[col("sort")]),
         category: String(r[col("category")] ?? "").trim(),
+        sub_category: String(r[col("sub_category")] ?? "").trim(),
         name: String(r[col("name")] ?? "").trim(),
         price_yen: toNum(r[col("price_yen")]),
         price_s: toNum(r[col("price_s")]),
@@ -273,31 +289,15 @@ categories.forEach(cat => {
       list.sort((a,b) => (a.sort ?? 9999) - (b.sort ?? 9999));
             // シェリーだけサブカテゴリ分け
       let groupedSub = null;
-      
-      if(cat === "シェリー" && groupedSub){
-  Object.keys(groupedSub).forEach(sub => {
 
-    const subTitle = document.createElement("h3");
-    subTitle.className = "sub-title";
-    subTitle.textContent = sub;
-    section.appendChild(subTitle);
-
-    groupedSub[sub].forEach(item => {
-      renderCard(item, section);
-    });
-
-  });
-} else {
-  list.forEach(item => {
-    renderCard(item, section);
-  });
-}
-
+     
       const section = document.createElement("section");
       section.id = cat;
+       // 見出し
       let headerHtml = `<h2>${esc(cat)}</h2>`;
-
-      if (PRICE_FROM_MAP[cat]) {
+      
+　　　　// ワインの「¥720～」など
+       if (PRICE_FROM_MAP[cat]) {
         headerHtml += `
           <div class="muted" style="font-size:13px; margin-bottom:6px;">
             ${PRICE_FROM_MAP[cat]}
@@ -313,14 +313,60 @@ categories.forEach(cat => {
       //       </div>
       //     `;
       //   }
-        
-        section.innerHTML = headerHtml;
-
+      section.innerHTML = headerHtml;
       root.appendChild(section);
+      
+     if(cat === "Sherry"){
+    // サブカテゴリ順を固定
+    const SUB_ORDER = ["辛口","甘口","極甘口"];
 
-      list.forEach(item => {
-        const card = document.createElement("div");
-        card.className = "card";
+    // sub_categoryでグルーピング
+    const groupedSub = {};
+    for(const it of list){
+      const key = (it.sub_category || "").trim() || "その他";
+      if(!groupedSub[key]) groupedSub[key] = [];
+      groupedSub[key].push(it);
+    }
+
+    // SUB_ORDERの順に描画（無いものはスキップ）
+    for(const sub of SUB_ORDER){
+      const subList = groupedSub[sub];
+      if(!subList || subList.length === 0) continue;
+
+      const subTitle = document.createElement("h3");
+      subTitle.className = "sub-title";
+      subTitle.textContent = sub;
+      section.appendChild(subTitle);
+
+      subList.forEach(item => {
+        // 既存の card 描画ロジック（あなたの list.forEach の中身）を関数化して呼ぶのが理想だけど、
+        // 今日は最短でいくので、ここで renderCard を使うなら renderCard を「価格分岐対応」に更新してください
+        renderCard(item, section);
+      });
+    }
+
+        
+  // SUB_ORDER以外のサブカテゴリが入っていた場合は最後に
+    Object.keys(groupedSub).forEach(sub => {
+      if(SUB_ORDER.includes(sub)) return;
+      const subList = groupedSub[sub];
+      if(!subList || subList.length === 0) return;
+
+      const subTitle = document.createElement("h3");
+      subTitle.className = "sub-title";
+      subTitle.textContent = sub;
+      section.appendChild(subTitle);
+
+      subList.forEach(item => renderCard(item, section));
+    });
+
+  } else {
+    // 通常カテゴリはそのまま
+    list.forEach(item => {
+      renderCard(item, section);
+    });
+  }
+});
 
   //       const imgHtml = item.image_url
      //      ? `<img src="${item.image_url.trim()}" alt="${esc(item.name)}" loading="lazy">`
