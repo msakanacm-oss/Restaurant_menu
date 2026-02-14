@@ -66,6 +66,12 @@
   color: #aaa;
   margin-bottom: 8px;
 }
+  .size-row {
+  margin-top: 6px;
+  font-size: 14px;
+  color: #ddd;
+}
+
 
   .sub-title {
   font-size: 14px;
@@ -281,76 +287,69 @@ categories.forEach(cat => {
 });
 
 
-    categories.forEach(cat => {
-      const list = grouped[cat] || [];
-      // 全空カテゴリは出さない（見た目スッキリ）
-      if(list.length === 0) return;
+   categories.forEach(cat => {
+  const list = grouped[cat] || [];
+  if (list.length === 0) return;
 
-      list.sort((a,b) => (a.sort ?? 9999) - (b.sort ?? 9999));
-            // シェリーだけサブカテゴリ分け
-      let groupedSub = null;
+  list.sort((a, b) => (a.sort ?? 9999) - (b.sort ?? 9999));
 
-     
-      const section = document.createElement("section");
-      section.id = cat;
-       // 見出し
-      let headerHtml = `<h2>${esc(cat)}</h2>`;
-      
-　　　　// ワインの「¥720～」など
-       if (PRICE_FROM_MAP[cat]) {
-        headerHtml += `
-          <div class="muted" style="font-size:13px; margin-bottom:6px;">
-            ${PRICE_FROM_MAP[cat]}
-          </div>
-        `;
-      }
+  // sectionを先に作る
+  const section = document.createElement("section");
+  section.id = cat;
 
-    //   let headerHtml = `<h2>${esc(cat)}</h2>`;
-     //    if(cat === "Comida（フード）"){
-     //      headerHtml += `
-      //       <div class="size-legend">
-      //         Size : S（お一人様） / M（2名様） / L（シェア）
-      //       </div>
-      //     `;
-      //   }
-      section.innerHTML = headerHtml;
-      root.appendChild(section);
-      
-     if(cat === "Sherry"){
-    // サブカテゴリ順を固定
-    const SUB_ORDER = ["辛口","甘口","極甘口"];
+  // 見出し
+  let headerHtml = `<h2>${esc(cat)}</h2>`;
 
-    // sub_categoryでグルーピング
+  // ワインの「¥720～」など
+  if (PRICE_FROM_MAP[cat]) {
+    headerHtml += `
+      <div class="muted" style="font-size:13px; margin-bottom:6px;">
+        ${PRICE_FROM_MAP[cat]}
+      </div>
+    `;
+  }
+
+  // フードのサイズ説明（必要ならON）
+  if (cat === "Comida（フード）") {
+    headerHtml += `
+      <div class="size-legend">
+        Size : S（お一人様） / M（2名様） / L（シェア）
+      </div>
+    `;
+  }
+
+  section.innerHTML = headerHtml;
+  root.appendChild(section);
+
+  // --- Sherryだけサブカテゴリ ---
+  if (cat === "Sherry") {
+    const SUB_ORDER = ["辛口", "甘口", "極甘口"];
+
     const groupedSub = {};
-    for(const it of list){
+    for (const it of list) {
       const key = (it.sub_category || "").trim() || "その他";
-      if(!groupedSub[key]) groupedSub[key] = [];
+      if (!groupedSub[key]) groupedSub[key] = [];
       groupedSub[key].push(it);
     }
 
-    // SUB_ORDERの順に描画（無いものはスキップ）
-    for(const sub of SUB_ORDER){
+    // 指定順で表示
+    for (const sub of SUB_ORDER) {
       const subList = groupedSub[sub];
-      if(!subList || subList.length === 0) continue;
+      if (!subList || subList.length === 0) continue;
 
       const subTitle = document.createElement("h3");
       subTitle.className = "sub-title";
       subTitle.textContent = sub;
       section.appendChild(subTitle);
 
-      subList.forEach(item => {
-        // 既存の card 描画ロジック（あなたの list.forEach の中身）を関数化して呼ぶのが理想だけど、
-        // 今日は最短でいくので、ここで renderCard を使うなら renderCard を「価格分岐対応」に更新してください
-        renderCard(item, section);
-      });
+      subList.forEach(item => renderCard(item, section));
     }
 
-        
-  // SUB_ORDER以外のサブカテゴリが入っていた場合は最後に
+    // その他があれば最後に
     Object.keys(groupedSub).forEach(sub => {
-      if(SUB_ORDER.includes(sub)) return;
+      if (SUB_ORDER.includes(sub)) return;
       const subList = groupedSub[sub];
-      if(!subList || subList.length === 0) return;
+      if (!subList || subList.length === 0) return;
 
       const subTitle = document.createElement("h3");
       subTitle.className = "sub-title";
@@ -361,59 +360,11 @@ categories.forEach(cat => {
     });
 
   } else {
-    // 通常カテゴリはそのまま
-    list.forEach(item => {
-      renderCard(item, section);
-    });
+    // 通常カテゴリ
+    list.forEach(item => renderCard(item, section));
   }
 });
 
-  //       const imgHtml = item.image_url
-     //      ? `<img src="${item.image_url.trim()}" alt="${esc(item.name)}" loading="lazy">`
-     //      : `<img alt="" loading="lazy">`;
-        const imgSrc = toImageUrl(item.image_id, item.image_url);
-
-        const imgHtml = imgSrc
-        ? `<img src="${imgSrc}" alt="${esc(item.name)}" loading="lazy">`
-        : `<img alt="" loading="lazy">`;
-
-
-    let priceHtml = "";
-
-// 1) ワイン系は個別価格を出さない（カテゴリ側で「¥720～」を出すため）
-if (PRICE_FROM_MAP[item.category]) {
-  priceHtml = "";
-}
-// 2) フード：S/M/L がある場合だけサイズ価格表示
-else if (item.category === "Comida（フード）" && (item.price_s || item.price_m || item.price_l)) {
-  const parts = [];
-  if (item.price_s) parts.push(`S ¥${item.price_s.toLocaleString("ja-JP")}`);
-  if (item.price_m) parts.push(`M ¥${item.price_m.toLocaleString("ja-JP")}`);
-  if (item.price_l) parts.push(`L ¥${item.price_l.toLocaleString("ja-JP")}`);
-  priceHtml = `<div class="size-row">${parts.join(" / ")}</div>`;
-}
-// 3) それ以外：通常価格
-else if (item.price_yen) {
-  priceHtml = `<div class="price">¥${item.price_yen.toLocaleString("ja-JP")}</div>`;
-}
-
-    // 通常価格
-    else if(item.price_yen){
-      priceHtml = `<div class="price">¥${item.price_yen.toLocaleString("ja-JP")}</div>`;
-    }
-
-card.innerHTML = `
-  ${imgHtml}
-  <div class="meta">
-    <div class="name">${esc(item.name)}</div>
-    ${priceHtml}
-    <div class="desc">${esc(item.desc)}</div>
-  </div>
-`;
-
-        section.appendChild(card);
-      });
-    });
 
     if(root.innerHTML.trim() === ""){
       root.className = "muted";
