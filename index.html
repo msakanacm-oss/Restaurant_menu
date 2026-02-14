@@ -74,11 +74,17 @@
 
 
   .sub-title {
-  font-size: 14px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  margin-top: 24px;
+  margin-bottom: 8px;
+}
+
+  .sub-price {
+  font-size: 16px;
+  margin-left: 8px;
   color: #ccc;
-  margin-top: 18px;
-  margin-bottom: 6px;
-  letter-spacing: 0.05em;
 }
 
 
@@ -117,10 +123,16 @@ const CATEGORY_ORDER = [
 const orderIndex = Object.fromEntries(CATEGORY_ORDER.map((c, i) => [c, i]));
 
 const PRICE_FROM_MAP = {
-  "Vino tinto（赤ワイン）": "¥720～",
-  "Vino blanco（白ワイン）": "¥720～",
-  "Vino rosado（ロゼワイン）": "¥720～",
-  "Vino naranja（オレンジワイン）": "¥720～"
+  "Vino tinto（赤ワイン）": "¥760～",
+  "Vino blanco（白ワイン）": "¥760～",
+  "Vino rosado（ロゼワイン）": "¥800～",
+  "Vino naranja（オレンジワイン）": "¥800～"
+};
+
+  const SHERRY_PRICE_MAP = {
+  "辛口": "¥700～",
+  "甘口": "¥830～",
+  "極甘口": "¥830～"
 };
   
 /** CSVパーサ（ダブルクォート/カンマ/改行に対応） */
@@ -184,8 +196,9 @@ function toImageUrl(image_id, image_url){
 
   let priceHtml = "";
 
-  if (PRICE_FROM_MAP[item.category]) {
-    priceHtml = "";
+  if (PRICE_FROM_MAP[item.category] || item.category === "Sherry") {
+  priceHtml = "";
+}
   } else if (item.category === "Comida（フード）" && (item.price_s || item.price_m || item.price_l)) {
     const parts = [];
     if (item.price_s) parts.push(`S ¥${item.price_s.toLocaleString("ja-JP")}`);
@@ -339,7 +352,10 @@ categories.forEach(cat => {
 
       const subTitle = document.createElement("h3");
       subTitle.className = "sub-title";
-      subTitle.textContent = sub;
+      const priceLabel = SHERRY_PRICE_MAP[sub] ? 
+  ` <span class="sub-price">${SHERRY_PRICE_MAP[sub]}</span>` : "";
+
+subTitle.innerHTML = sub + priceLabel;
       section.appendChild(subTitle);
 
       subList.forEach(item => renderCard(item, section));
