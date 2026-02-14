@@ -71,7 +71,13 @@
   font-size: 14px;
   color: #ddd;
 }
-
+  
+.category-price {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 8px;
+}
 
   .sub-title {
   font-size: 18px;
@@ -315,9 +321,9 @@ categories.forEach(cat => {
   let headerHtml = `<h2>${esc(cat)}</h2>`;
 
   // ワインの「¥720～」など
-  if (PRICE_FROM_MAP[cat]) {
+   if (PRICE_FROM_MAP[cat]) {
     headerHtml += `
-      <div class="muted" style="font-size:13px; margin-bottom:6px;">
+      <div class="category-price">
         ${PRICE_FROM_MAP[cat]}
       </div>
     `;
