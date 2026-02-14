@@ -240,6 +240,17 @@ categories.forEach(cat => {
       if(list.length === 0) return;
 
       list.sort((a,b) => (a.sort ?? 9999) - (b.sort ?? 9999));
+            // シェリーだけサブカテゴリ分け
+      let groupedSub = null;
+      
+      if(cat === "シェリー"){
+        groupedSub = {};
+        list.forEach(item => {
+          const key = item.sub_category || "その他";
+          if(!groupedSub[key]) groupedSub[key] = [];
+          groupedSub[key].push(item);
+        });
+      }
 
       const section = document.createElement("section");
       section.id = cat;
